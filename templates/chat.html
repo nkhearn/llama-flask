@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div id="chat-log" class="chat-log"></div>
+        <form id="chat-form" enctype="multipart/form-data">
+            <input type="hidden" name="model" value="{{ model }}">
+            <input type="hidden" name="prompt" value="{{ prompt }}">
+            <input type="hidden" name="num_ctx" value="{{ num_ctx }}">
+            <input type="hidden" name="temperature" value="{{ temperature }}">
+            <input type="hidden" name="top_k" value="{{ top_k }}">
+            <input type="hidden" name="n_gpu_layers" value="{{ n_gpu_layers }}">
+            <input type="hidden" name="vision" value="{{ vision }}">
+
+            <div class="input-group">
+                <textarea id="user-input" name="user_input" placeholder="Enter your message..."></textarea>
+                <button type="submit">Send</button>
+                {% if vision %}
+                <div class="file-upload">
+                    <input type="file" id="image-upload" name="image" accept="image/*">
+                    <label for="image-upload">?</label>
+                </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+    <script>
+    let conversationHistory = [];
+
+    document.getElementById('chat-form').addEventListener('submit', async function(event) {
+        event.preventDefault();
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const chatLog = document.getElementById('chat-log');
+        const userInput = formData.get('user_input').trim();
+        const imageUploadElem = document.getElementById('image-upload');
+        const imageFile = imageUploadElem ? imageUploadElem.files[0] : null;
+
+        if (!userInput && (!imageFile || imageFile.size === 0)) {
+            return;
+        }
+
+        const userMessageElem = document.createElement('div');
+        userMessageElem.className = 'message user-message';
+
+        if (userInput) {
+            const textNode = document.createElement('p');
+            textNode.innerText = userInput;
+            userMessageElem.appendChild(textNode);
+        }
+
+        if (imageFile) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '200px';
+                img.style.borderRadius = '4px';
+                img.style.marginTop = '5px';
+                userMessageElem.appendChild(img);
+                chatLog.scrollTop = chatLog.scrollHeight;
+            };
+            reader.readAsDataURL(imageFile);
+        }
+
+        chatLog.appendChild(userMessageElem);
+        chatLog.scrollTop = chatLog.scrollHeight;
+
+        formData.append('history', JSON.stringify(conversationHistory));
+        form.reset();
+
+        const loadingElem = document.createElement('div');
+        loadingElem.className = 'message bot-message';
+        loadingElem.innerText = '...';
+        chatLog.appendChild(loadingElem);
+        chatLog.scrollTop = chatLog.scrollHeight;
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            chatLog.removeChild(loadingElem); // Remove loading indicator
+
+            if (response.ok) {
+                conversationHistory = data.history;
+                const newBotMessage = conversationHistory[conversationHistory.length - 1];
+
+                const msgElem = document.createElement('div');
+                msgElem.className = `message bot-message`;
+
+                if (Array.isArray(newBotMessage.content)) {
+                    newBotMessage.content.forEach(part => {
+                        if (part.type === 'text' && part.text) {
+                            const textNode = document.createElement('p');
+                            textNode.innerText = part.text;
+                            msgElem.appendChild(textNode);
+                        }
+                    });
+                } else {
+                    msgElem.innerText = newBotMessage.content;
+                }
+                chatLog.appendChild(msgElem);
+
+            } else {
+                const errorElem = document.createElement('div');
+                errorElem.className = 'message bot-message';
+                errorElem.innerText = 'Error: ' + data.error;
+                chatLog.appendChild(errorElem);
+            }
+        } catch (error) {
+            chatLog.removeChild(loadingElem);
+            const errorElem = document.createElement('div');
+            errorElem.className = 'message bot-message';
+            errorElem.innerText = 'Error: ' + error.toString();
+            chatLog.appendChild(errorElem);
+        } finally {
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+    });
+    </script>
+</body>
+</html>
