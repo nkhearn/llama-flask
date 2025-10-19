@@ -1,0 +1,93 @@
+/* General styles */
+body {
+    font-family: monospace;
+    background-color: #1a1a1a;
+    color: #f0f0f0;
+    margin: 0;
+    padding: 1em;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1em;
+}
+
+/* Setup page styles */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+label {
+    margin-bottom: 0.5em;
+}
+
+input, select, textarea, button {
+    background-color: #333;
+    color: #f0f0f0;
+    border: 1px solid #555;
+    padding: 0.5em;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+button {
+    cursor: pointer;
+    background-color: #4CAF50;
+    border-color: #4CAF50;
+}
+
+/* Chat page styles */
+.chat-log {
+    height: 70vh;
+    overflow-y: auto;
+    border: 1px solid #555;
+    padding: 1em;
+    margin-bottom: 1em;
+    background-color: #000;
+}
+
+.message {
+    margin-bottom: 1em;
+    line-height: 1.4;
+}
+
+.user-message {
+    color: #aae;
+}
+
+.bot-message {
+    color: #aea;
+}
+
+.input-group {
+    display: flex;
+    gap: 1em;
+}
+
+textarea {
+    flex-grow: 1;
+    resize: none;
+}
+
+.file-upload {
+    position: relative;
+}
+
+.file-upload input[type="file"] {
+    display: none;
+}
+
+.file-upload label {
+    cursor: pointer;
+    padding: 0.5em 1em;
+    background-color: #555;
+    border-radius: 4px;
+}
