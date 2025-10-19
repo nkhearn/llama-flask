@@ -17,7 +17,7 @@ def load_llm(model_name, num_ctx, n_gpu_layers, vision_enabled):
     global llm
     model_path = os.path.join(GGUF_DIR, model_name)
 
-    chat_format = "llava-1-5-chatml" if vision_enabled else "chatml"
+    chat_format = "gemma" if vision_enabled else "chatml"
 
     if llm is None or llm.model_path != model_path or llm.params.n_gpu_layers != int(n_gpu_layers):
         llm = Llama(
